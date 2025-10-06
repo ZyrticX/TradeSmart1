@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Test</title>
+    <style>
+        body {
+            font-family: system-ui;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #A020F0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #8010D0;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 בדיקת Supabase</h1>
+    
+    <div class="test-box">
+        <h2>1. הזן את פרטי Supabase:</h2>
+        <label>Supabase URL:</label>
+        <input type="text" id="urlInput" value="https://eoyuwxtflvadlrnycjkv.supabase.co" />
+        
+        <label>Anon Key (הדבק את המפתח המלא מ-Supabase → Settings → API):</label>
+        <input type="text" id="keyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+        
+        <br><br>
+        <button onclick="testConnection()">בדוק חיבור</button>
+        <div id="result1" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>2. בדיקת התחברות:</h2>
+        <label>Email:</label>
+        <input type="email" id="emailInput" value="test@example.com" />
+        
+        <label>Password:</label>
+        <input type="password" id="passwordInput" value="Test123456!" />
+        
+        <br><br>
+        <button onclick="testLogin()">נסה להתחבר</button>
+        <div id="result2" class="result" style="display:none;"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        window.testConnection = async function() {
+            const result = document.getElementById('result1');
+            result.style.display = 'block';
+            result.innerHTML = '⏳ בודק חיבור...';
+            
+            const url = document.getElementById('urlInput').value;
+            const key = document.getElementById('keyInput').value;
+            
+            if (!key || key.length < 100) {
+                result.innerHTML = '<span class="error">❌ המפתח קצר מדי! הדבק את המפתח המלא מ-Supabase.</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${url}/rest/v1/`, {
+                    headers: { 'apikey': key }
+                });
+                
+                if (response.status === 200) {
+                    result.innerHTML = `<span class="success">✅ החיבור תקין! (Status: ${response.status})</span>\n\nURL: ${url}\nKey length: ${key.length} תווים`;
+                } else if (response.status === 401) {
+                    result.innerHTML = `<span class="error">❌ המפתח לא נכון! (Status: 401)</span>\n\nURL: ${url}\nKey preview: ${key.substring(0, 50)}...\n\nלך ל-Supabase → Settings → API והעתק את המפתח המלא!`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ שגיאה: ${response.status}</span>`;
+                }
+            } catch (err) {
+                result.innerHTML = `<span class="error">❌ שגיאת רשת:\n${err.message}</span>`;
+            }
+        };
+        
+        window.testLogin = async function() {
+            const result = document.getElementById('result2');
+            result.style.display = 'block';
+            result.innerHTML = '⏳ מנסה להתחבר...';
+            
+            const url = document.getElementById('urlInput').value;
+            const key = document.getElementById('keyInput').value;
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            if (!key || key.length < 100) {
+                result.innerHTML = '<span class="error">❌ המפתח קצר מדי! בדוק את שדה המפתח למעלה.</span>';
+                return;
+            }
+            
+            try {
+                const supabase = createClient(url, key);
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        result.innerHTML = `<span class="error">❌ אימייל או סיסמה שגויים</span>\n\nזה אומר שהחיבור ל-Supabase עובד! ✅\nפשוט המשתמש לא קיים או הסיסמה שגויה.\n\nלך ל-Supabase → Authentication → Users ליצור משתמש.`;
+                    } else {
+                        result.innerHTML = `<span class="error">❌ שגיאת Supabase:\n${error.message}</span>`;
+                    }
+                } else {
+                    result.innerHTML = `<span class="success">✅ ההתחברות הצליחה!</span>\n\nUser: ${data.user.email}\n\nהכל עובד! 🎉`;
+                }
+            } catch (err) {
+                result.innerHTML = `<span class="error">❌ שגיאה:\n${err.message}</span>`;
+            }
+        };
+    </script>
+</body>
+</html>
+
