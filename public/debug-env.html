@@ -30,30 +30,48 @@
     <script type="module">
         const output = document.getElementById('output');
         
-        // Get all environment variables
-        const vars = import.meta.env;
+        let html = '<h2>🚨 בדיקת משתני סביבה:</h2>';
         
-        let html = '<h2>All Environment Variables:</h2>';
+        // Check if import.meta.env exists
+        if (!import.meta || !import.meta.env) {
+            html += '<div class="var error">❌ import.meta.env לא קיים! זו הבעיה!</div>';
+            html += '<div class="var">זה אומר שהמשתנים לא הוטמעו ב-build.</div>';
+        } else {
+            const vars = import.meta.env;
+            
+            html += '<h2>All Environment Variables:</h2>';
+            
+            const keys = Object.keys(vars);
+            if (keys.length === 0) {
+                html += '<div class="var error">❌ אין משתני סביבה!</div>';
+            } else {
+                // Show all vars
+                keys.forEach(key => {
+                    const value = vars[key];
+                    html += `<div class="var"><strong>${key}:</strong> ${typeof value === 'string' ? (value.length > 50 ? value.substring(0, 50) + '...' : value) : value}</div>`;
+                });
+            }
+            
+            // Specific checks
+            html += '<h2>Specific Checks:</h2>';
+            
+            const url = vars.VITE_SUPABASE_URL;
+            const key = vars.VITE_SUPABASE_ANON_KEY;
+            
+            html += `<div class="var ${url ? 'success' : 'error'}">
+                <strong>VITE_SUPABASE_URL:</strong> ${url || '❌ NOT FOUND'}
+            </div>`;
+            
+            html += `<div class="var ${key ? 'success' : 'error'}">
+                <strong>VITE_SUPABASE_ANON_KEY:</strong> ${key ? `✅ Found (${key.length} chars)` : '❌ NOT FOUND'}
+            </div>`;
+        }
         
-        // Show all vars
-        Object.keys(vars).forEach(key => {
-            const value = vars[key];
-            html += `<div class="var"><strong>${key}:</strong> ${typeof value === 'string' ? (value.length > 50 ? value.substring(0, 50) + '...' : value) : value}</div>`;
-        });
-        
-        // Specific checks
-        html += '<h2>Specific Checks:</h2>';
-        
-        const url = import.meta.env.VITE_SUPABASE_URL;
-        const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        
-        html += `<div class="var ${url ? 'success' : 'error'}">
-            <strong>VITE_SUPABASE_URL:</strong> ${url || '❌ NOT FOUND'}
-        </div>`;
-        
-        html += `<div class="var ${key ? 'success' : 'error'}">
-            <strong>VITE_SUPABASE_ANON_KEY:</strong> ${key ? `✅ Found (${key.length} chars)` : '❌ NOT FOUND'}
-        </div>`;
+        // Show build info
+        html += '<h2>Build Info:</h2>';
+        html += `<div class="var">Mode: ${import.meta.env?.MODE || 'unknown'}</div>`;
+        html += `<div class="var">Prod: ${import.meta.env?.PROD || false}</div>`;
+        html += `<div class="var">Dev: ${import.meta.env?.DEV || false}</div>`;
         
         output.innerHTML = html;
     </script>
