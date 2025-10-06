@@ -45,6 +45,11 @@ export const createEntity = (tableName) => {
       return data;
     },
 
+    // Alias for getAll (for backward compatibility)
+    async list(orderBy = 'created_at') {
+      return this.getAll(orderBy);
+    },
+
     // Filter records with optional ordering
     async filter(filters = {}, orderBy = 'created_at') {
       const isDescending = orderBy.startsWith('-');

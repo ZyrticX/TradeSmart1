@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
+    currency TEXT DEFAULT 'USD',
     account_size DECIMAL(15, 2) DEFAULT 100000 CHECK (account_size >= 0),
     default_risk_percentage DECIMAL(5, 2) DEFAULT 2.0 CHECK (default_risk_percentage >= 0 AND default_risk_percentage <= 100),
     max_position_size_percentage DECIMAL(5, 2) DEFAULT 25.0 CHECK (max_position_size_percentage >= 0 AND max_position_size_percentage <= 100),
@@ -44,10 +45,11 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 -- Add comments
 COMMENT ON TABLE accounts IS 'Trading accounts belonging to users';
-COMMENT ON COLUMN accounts.account_size IS 'Total account size in USD';
+COMMENT ON COLUMN accounts.currency IS 'Account currency (USD, EUR, ILS, etc.)';
+COMMENT ON COLUMN accounts.account_size IS 'Total account size in account currency';
 COMMENT ON COLUMN accounts.default_risk_percentage IS 'Default risk percentage per trade';
 COMMENT ON COLUMN accounts.max_position_size_percentage IS 'Maximum position size as percentage of account';
-COMMENT ON COLUMN accounts.commission_fee IS 'Commission fee per trade in USD';
+COMMENT ON COLUMN accounts.commission_fee IS 'Commission fee per trade in account currency';
 COMMENT ON COLUMN accounts.strategies IS 'Array of trading strategy names';
 
 -- ───────────────────────────────────────────────────────────────────────────
