@@ -4,6 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Debug logging
+console.log('🔧 Supabase Config Check:');
+console.log('URL exists:', !!supabaseUrl);
+console.log('Key exists:', !!supabaseAnonKey);
+if (supabaseUrl) {
+  console.log('URL preview:', supabaseUrl.substring(0, 30) + '...');
+}
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ SUPABASE CREDENTIALS MISSING!');
   console.error('Please set the following environment variables in Vercel:');
