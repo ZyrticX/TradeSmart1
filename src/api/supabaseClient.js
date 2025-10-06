@@ -181,26 +181,31 @@ export const auth = {
 
   // Sign in with email and password
   async signIn(email, password) {
-    console.log('🔐 Attempting login...');
+    console.log('🔐 Attempting Supabase login...');
+    console.log('📍 Supabase URL:', supabaseUrl);
+    console.log('🔑 Using key:', supabaseAnonKey?.substring(0, 20) + '...');
     
     if (!supabase || !supabase.auth) {
       console.error('❌ Supabase client not initialized!');
-      throw new Error('Supabase is not configured. Please check your environment variables.');
+      throw new Error('Supabase client is not initialized');
     }
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      console.log('📡 Calling signInWithPassword...');
+      const response = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      if (error) {
-        console.error('❌ Login error:', error.message);
-        throw error;
+      console.log('📥 Raw response:', response);
+      
+      if (response.error) {
+        console.error('❌ Supabase error:', response.error);
+        throw response.error;
       }
       
-      console.log('✅ Login successful!');
-      return data;
+      console.log('✅ Login successful!', response.data);
+      return response;
     } catch (err) {
       console.error('❌ Login exception:', err);
       throw err;

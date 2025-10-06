@@ -31,41 +31,37 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout')), 10000)
-      );
+      console.log('🔑 Login attempt with email:', email);
       
-      const loginPromise = signIn(email, password);
+      const { data, error } = await signIn(email, password);
       
-      const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
+      console.log('📥 Login response:', { data, error });
       
       if (error) {
-        console.error('Login error:', error);
-        setError(
-          getText('Invalid email or password. Please try again.', 'אימייל או סיסמה שגויים. אנא נסה שוב.')
-        );
+        console.error('❌ Login error details:', {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          hint: error.hint
+        });
+        
+        // Show specific error message
+        if (error.message?.includes('Invalid login credentials')) {
+          setError(getText('Invalid email or password', 'אימייל או סיסמה שגויים'));
+        } else if (error.message?.includes('Email not confirmed')) {
+          setError(getText('Please confirm your email first', 'אנא אשר את האימייל תחילה'));
+        } else {
+          setError(error.message || getText('Login failed', 'ההתחברות נכשלה'));
+        }
         return;
       }
 
+      console.log('✅ Login successful, redirecting...');
       // Redirect to dashboard after successful login
       navigate('/dashboard');
     } catch (err) {
-      console.error('Login exception:', err);
-      
-      // Check if it's a configuration error
-      if (err.message?.includes('timeout') || err.message?.includes('configured')) {
-        setError(
-          getText(
-            'Unable to connect. Please check your internet connection or contact support.',
-            '⚠️ לא ניתן להתחבר. הגדרות Supabase חסרות ב-Vercel. צור קשר עם התמיכה.'
-          )
-        );
-      } else {
-        setError(
-          getText('An error occurred. Please try again.', 'אירעה שגיאה. אנא נסה שוב.')
-        );
-      }
+      console.error('❌ Login exception:', err);
+      setError(err.message || getText('An error occurred', 'אירעה שגיאה'));
     } finally {
       setLoading(false);
     }
