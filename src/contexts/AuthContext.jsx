@@ -54,8 +54,9 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (email, password, metadata = {}) => {
     try {
-      const data = await User.signUp(email, password, metadata);
-      return { data, error: null };
+      // User.signUp already returns { data, error }
+      const response = await User.signUp(email, password, metadata);
+      return response;
     } catch (error) {
       return { data: null, error };
     }
@@ -63,8 +64,9 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (email, password) => {
     try {
-      const data = await User.signIn(email, password);
-      return { data, error: null };
+      // User.signIn already returns { data, error }
+      const response = await User.signIn(email, password);
+      return response;
     } catch (error) {
       return { data: null, error };
     }
