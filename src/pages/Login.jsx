@@ -145,7 +145,7 @@ export default function Login() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-gray-600">
-              {getText("Don't have an account?", 'אין לך חשבון?', '¿No tienes una cuenta?')}{' '}
+              {getText("Don't have an account?", 'אין לך חשבון?')}{' '}
               <Link to="/signup" className="text-purple-600 hover:text-purple-700 font-semibold hover:underline">
                 {getText('Sign up', 'הירשם')}
               </Link>
