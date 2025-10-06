@@ -173,21 +173,54 @@ export const auth = {
 
   // Get current user
   async getCurrentUser() {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    return user;
+    try {
+      if (!supabase || !supabase.auth) {
+        console.warn('Supabase client not initialized');
+        return null;
+      }
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('getCurrentUser error:', error);
+        return null;
+      }
+      return user;
+    } catch (err) {
+      console.error('getCurrentUser exception:', err);
+      return null;
+    }
   },
 
   // Get current session
   async getSession() {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return session;
+    try {
+      if (!supabase || !supabase.auth) {
+        console.warn('Supabase client not initialized');
+        return null;
+      }
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('getSession error:', error);
+        return null;
+      }
+      return session;
+    } catch (err) {
+      console.error('getSession exception:', err);
+      return null;
+    }
   },
 
   // Listen to auth state changes
   onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange(callback);
+    try {
+      if (!supabase || !supabase.auth) {
+        console.warn('Supabase client not initialized for onAuthStateChange');
+        return { data: { subscription: { unsubscribe: () => {} } } };
+      }
+      return supabase.auth.onAuthStateChange(callback);
+    } catch (err) {
+      console.error('onAuthStateChange exception:', err);
+      return { data: { subscription: { unsubscribe: () => {} } } };
+    }
   },
 
   // Reset password
