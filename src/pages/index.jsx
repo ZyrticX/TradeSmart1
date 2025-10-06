@@ -58,9 +58,40 @@ function PagesContent() {
     const { user, loading } = useAuth();
     const currentPage = _getCurrentPage(location.pathname);
     
-    // Don't render routes while loading auth state
+    // Show loading indicator while loading auth state
     if (loading) {
-        return null;
+        return (
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100vh',
+                fontFamily: 'system-ui',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            }}>
+                <div style={{
+                    textAlign: 'center',
+                    color: 'white'
+                }}>
+                    <div style={{
+                        width: '60px',
+                        height: '60px',
+                        border: '4px solid rgba(255,255,255,0.3)',
+                        borderTop: '4px solid white',
+                        borderRadius: '50%',
+                        margin: '0 auto 20px',
+                        animation: 'spin 1s linear infinite'
+                    }}></div>
+                    <p style={{ fontSize: '18px', margin: 0 }}>טוען...</p>
+                    <style>{`
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                </div>
+            </div>
+        );
     }
     
     return (
