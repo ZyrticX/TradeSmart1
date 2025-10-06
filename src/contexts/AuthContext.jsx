@@ -22,7 +22,18 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         console.log('🔐 Initializing auth...');
-        const currentSession = await User.getSession();
+        
+        // Add timeout to prevent hanging
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 5000)
+        );
+        
+        const sessionPromise = User.getSession();
+        const currentSession = await Promise.race([sessionPromise, timeout]).catch(err => {
+          console.warn('⚠️ Session check timeout, continuing without session');
+          return null;
+        });
+        
         console.log('📋 Session:', currentSession ? 'Found' : 'None');
         setSession(currentSession);
         
