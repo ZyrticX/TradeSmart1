@@ -142,27 +142,61 @@ export const createEntity = (tableName) => {
 export const auth = {
   // Sign up with email and password
   async signUp(email, password, metadata = {}) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: metadata
-      }
-    });
+    console.log('📝 Attempting signup...');
     
-    if (error) throw error;
-    return data;
+    if (!supabase || !supabase.auth) {
+      console.error('❌ Supabase client not initialized!');
+      throw new Error('Supabase is not configured. Please check your environment variables.');
+    }
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata
+        }
+      });
+      
+      if (error) {
+        console.error('❌ Signup error:', error.message);
+        throw error;
+      }
+      
+      console.log('✅ Signup successful!');
+      return data;
+    } catch (err) {
+      console.error('❌ Signup exception:', err);
+      throw err;
+    }
   },
 
   // Sign in with email and password
   async signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    console.log('🔐 Attempting login...');
     
-    if (error) throw error;
-    return data;
+    if (!supabase || !supabase.auth) {
+      console.error('❌ Supabase client not initialized!');
+      throw new Error('Supabase is not configured. Please check your environment variables.');
+    }
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error('❌ Login error:', error.message);
+        throw error;
+      }
+      
+      console.log('✅ Login successful!');
+      return data;
+    } catch (err) {
+      console.error('❌ Login exception:', err);
+      throw err;
+    }
   },
 
   // Sign out

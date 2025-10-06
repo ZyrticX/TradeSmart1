@@ -18,23 +18,18 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    console.log('🔐 Initializing auth in background...');
-    
     // Check active sessions in the background (doesn't block UI)
     const initializeAuth = async () => {
       try {
         const currentSession = await User.getSession();
-        console.log('📋 Session:', currentSession ? 'Found' : 'None');
         setSession(currentSession);
         
         if (currentSession) {
           const currentUser = await User.getCurrentUser();
-          console.log('👤 User:', currentUser?.email || 'None');
           setUser(currentUser);
         }
-        console.log('✅ Auth initialization complete');
       } catch (error) {
-        console.error('❌ Error initializing auth:', error);
+        console.error('Auth initialization error:', error);
       }
     };
 
