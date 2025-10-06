@@ -2,6 +2,11 @@
 -- FIX: Update trades table to match BASE44 structure
 -- ═══════════════════════════════════════════════════════════════════════════
 
+-- First, drop dependent views (we'll recreate them later)
+DROP VIEW IF EXISTS active_trades_summary CASCADE;
+DROP VIEW IF EXISTS closed_trades_summary CASCADE;
+DROP VIEW IF EXISTS trade_performance_summary CASCADE;
+
 -- Add user_id column if missing
 ALTER TABLE trades 
 ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
@@ -111,6 +116,37 @@ COMMENT ON COLUMN trades.screenshot_url IS 'URL to trade screenshot/chart';
 COMMENT ON COLUMN trades.is_sample IS 'Whether this is a sample/demo trade';
 COMMENT ON COLUMN trades.notes IS 'Trade notes';
 
+-- Recreate views with updated schema
+CREATE OR REPLACE VIEW active_trades_summary AS
+SELECT 
+    t.*,
+    a.name as account_name,
+    a.currency
+FROM trades t
+JOIN accounts a ON t.account_id = a.id
+WHERE t.status = 'open';
+
+CREATE OR REPLACE VIEW closed_trades_summary AS
+SELECT 
+    t.*,
+    a.name as account_name,
+    a.currency
+FROM trades t
+JOIN accounts a ON t.account_id = a.id
+WHERE t.status = 'closed';
+
+CREATE OR REPLACE VIEW trade_performance_summary AS
+SELECT 
+    user_id,
+    account_id,
+    COUNT(*) as total_trades,
+    COUNT(CASE WHEN status = 'open' THEN 1 END) as open_trades,
+    COUNT(CASE WHEN status = 'closed' THEN 1 END) as closed_trades,
+    COUNT(CASE WHEN status = 'closed' AND profit_loss::NUMERIC > 0 THEN 1 END) as winning_trades,
+    COUNT(CASE WHEN status = 'closed' AND profit_loss::NUMERIC <= 0 THEN 1 END) as losing_trades
+FROM trades
+GROUP BY user_id, account_id;
+
 -- Success message
 DO $$
 BEGIN
@@ -127,6 +163,7 @@ BEGIN
     RAISE NOTICE '  ✓ Changed data types to match BASE44';
     RAISE NOTICE '  ✓ Renamed close_price → exit_price';
     RAISE NOTICE '  ✓ Renamed close_date → exit_date';
+    RAISE NOTICE '  ✓ Recreated all views';
     RAISE NOTICE '═══════════════════════════════════════════════════════════════';
 END
 $$;
