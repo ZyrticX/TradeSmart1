@@ -81,7 +81,22 @@ Value: [ה-Anon Key של Supabase שלך]
 
 תוך 1-2 דקות האתר שלך יהיה אונליין!
 
-תקבל URL כמו: `https://tradesmart-xyz.vercel.app`
+תקבל URL כמו: `https://tradesmart1-xyz.vercel.app`
+
+---
+
+## 🌐 הגדרת הדומיין tradesmart.co.il
+
+אחרי שהאתר עלה ל-Vercel בהצלחה, תוכל לחבר את הדומיין המותאם אישית שלך!
+
+📖 **מדריך מפורט:** [CUSTOM_DOMAIN_SETUP.md](./CUSTOM_DOMAIN_SETUP.md)
+
+**בקצרה:**
+1. ב-Vercel: Settings → Domains
+2. הוסף: `tradesmart.co.il`
+3. עדכן DNS records אצל ספק הדומיין
+4. המתן 5 דקות - 48 שעות
+5. האתר יהיה זמין ב-tradesmart.co.il! 🎉
 
 ---
 
