@@ -5,7 +5,34 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not found. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file');
+  console.error('❌ SUPABASE CREDENTIALS MISSING!');
+  console.error('Please set the following environment variables in Vercel:');
+  console.error('- VITE_SUPABASE_URL');
+  console.error('- VITE_SUPABASE_ANON_KEY');
+  console.error('Current values:', { supabaseUrl, supabaseAnonKey });
+  
+  // Show error to user
+  if (typeof document !== 'undefined') {
+    document.body.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; direction: rtl; text-align: center; padding: 20px; background: #f5f5f5;">
+        <div style="max-width: 600px; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h1 style="color: #dc2626; margin-bottom: 20px;">⚠️ שגיאת הגדרות</h1>
+          <p style="font-size: 18px; margin-bottom: 20px;">משתני הסביבה של Supabase לא מוגדרים ב-Vercel</p>
+          <p style="color: #666; margin-bottom: 10px;">נדרש להגדיר:</p>
+          <ul style="list-style: none; padding: 0; background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <li style="margin: 10px 0;">✓ VITE_SUPABASE_URL</li>
+            <li style="margin: 10px 0;">✓ VITE_SUPABASE_ANON_KEY</li>
+          </ul>
+          <p style="color: #666;">
+            עבור למדריך: 
+            <a href="https://github.com/ZyrticX/TradeSmart1/blob/main/🔧_QUICK_FIX_INSTRUCTIONS.md" target="_blank" style="color: #A020F0;">
+              הוראות תיקון
+            </a>
+          </p>
+        </div>
+      </div>
+    `;
+  }
 }
 
 // Create Supabase client
