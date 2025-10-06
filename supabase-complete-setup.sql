@@ -112,44 +112,56 @@ COMMENT ON COLUMN accounts.is_sample IS 'Whether this is a sample/demo account';
 
 CREATE TABLE IF NOT EXISTS trades (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    symbol TEXT NOT NULL,
+    symbol VARCHAR(255) NOT NULL,
     date_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    direction TEXT NOT NULL CHECK (direction IN ('long', 'short')),
-    entry_price DECIMAL(15, 4) NOT NULL CHECK (entry_price > 0),
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
-    total_quantity INTEGER NOT NULL CHECK (total_quantity > 0),
-    stop_price DECIMAL(15, 4) NOT NULL CHECK (stop_price > 0),
-    target_price DECIMAL(15, 4) CHECK (target_price IS NULL OR target_price > 0),
-    risk_percentage DECIMAL(5, 2) NOT NULL CHECK (risk_percentage >= 0 AND risk_percentage <= 100),
+    direction VARCHAR(255) NOT NULL CHECK (direction IN ('long', 'short')),
+    entry_price DECIMAL(15, 2) NOT NULL CHECK (entry_price > 0),
+    quantity DECIMAL(15, 2) NOT NULL CHECK (quantity > 0),
+    total_quantity DECIMAL(15, 2) NOT NULL CHECK (total_quantity > 0),
+    stop_price DECIMAL(15, 2) NOT NULL CHECK (stop_price > 0),
+    target_price TEXT, -- Can be null or empty string
+    risk_percentage DECIMAL(15, 2) NOT NULL CHECK (risk_percentage >= 0 AND risk_percentage <= 100),
     risk_amount DECIMAL(15, 2) NOT NULL CHECK (risk_amount >= 0),
-    position_size DECIMAL(15, 2) NOT NULL CHECK (position_size >= 0),
-    total_investment DECIMAL(15, 2) NOT NULL CHECK (total_investment >= 0),
-    strategy TEXT,
-    confidence_level INTEGER DEFAULT 0 CHECK (confidence_level >= 0 AND confidence_level <= 5),
+    position_size INTEGER NOT NULL CHECK (position_size >= 0),
+    total_investment INTEGER NOT NULL CHECK (total_investment >= 0),
+    current_price DECIMAL(15, 2), -- Current/last known price
+    exit_price TEXT, -- Can be null or empty string
+    exit_date TEXT, -- Can be null or empty string
+    status VARCHAR(255) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
+    strategy VARCHAR(255),
+    notes VARCHAR(255),
+    screenshot_url VARCHAR(255), -- Single screenshot URL
+    confidence_level TEXT, -- Stored as text for flexibility
     is_partially_closed BOOLEAN DEFAULT FALSE,
-    profit_loss DECIMAL(15, 2) DEFAULT 0,
-    total_commission DECIMAL(10, 2) DEFAULT 0 CHECK (total_commission >= 0),
-    status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
-    close_date TIMESTAMP WITH TIME ZONE,
-    close_price DECIMAL(15, 4) CHECK (close_price IS NULL OR close_price > 0),
-    close_reason TEXT,
+    profit_loss TEXT, -- Can be calculated value or text
+    profit_loss_percentage TEXT, -- Percentage as text
+    total_commission DECIMAL(15, 2) DEFAULT 0 CHECK (total_commission >= 0),
+    is_sample BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Constraints
-    CONSTRAINT valid_close_data CHECK (
-        (status = 'open' AND close_date IS NULL AND close_price IS NULL) OR
-        (status = 'closed' AND close_date IS NOT NULL AND close_price IS NOT NULL)
-    )
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Add comments
 COMMENT ON TABLE trades IS 'All trading positions (open and closed)';
+COMMENT ON COLUMN trades.user_id IS 'User who owns this trade';
+COMMENT ON COLUMN trades.account_id IS 'Trading account this trade belongs to';
+COMMENT ON COLUMN trades.symbol IS 'Trading symbol/ticker';
 COMMENT ON COLUMN trades.direction IS 'Trade direction: long or short';
-COMMENT ON COLUMN trades.confidence_level IS 'Confidence rating from 0-5 stars';
+COMMENT ON COLUMN trades.quantity IS 'Number of units/shares';
+COMMENT ON COLUMN trades.total_quantity IS 'Total quantity across all entries';
+COMMENT ON COLUMN trades.position_size IS 'Position size in account currency';
+COMMENT ON COLUMN trades.total_investment IS 'Total invested amount';
+COMMENT ON COLUMN trades.current_price IS 'Current/last known market price';
+COMMENT ON COLUMN trades.exit_price IS 'Exit price (can be text for multiple exits)';
+COMMENT ON COLUMN trades.exit_date IS 'Exit date (can be text for multiple exits)';
+COMMENT ON COLUMN trades.confidence_level IS 'Confidence rating (stored as text for flexibility)';
 COMMENT ON COLUMN trades.is_partially_closed IS 'True if some quantity was sold but position still open';
-COMMENT ON COLUMN trades.profit_loss IS 'Realized profit/loss in USD (negative for loss)';
+COMMENT ON COLUMN trades.profit_loss IS 'Realized profit/loss (can be text or number)';
+COMMENT ON COLUMN trades.profit_loss_percentage IS 'Profit/loss as percentage';
+COMMENT ON COLUMN trades.screenshot_url IS 'URL to trade screenshot/chart';
+COMMENT ON COLUMN trades.is_sample IS 'Whether this is a sample/demo trade';
 
 -- ───────────────────────────────────────────────────────────────────────────
 -- 2.3 Trade Events Table
