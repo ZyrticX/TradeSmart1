@@ -14,19 +14,13 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false - don't block the app!
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    console.log('🔐 Initializing auth...');
+    console.log('🔐 Initializing auth in background...');
     
-    // Set a maximum wait time - show the app after 2 seconds regardless
-    const maxWaitTimer = setTimeout(() => {
-      console.warn('⏱️ Max wait time reached, showing app...');
-      setLoading(false);
-    }, 2000);
-    
-    // Check active sessions and sets the user
+    // Check active sessions in the background (doesn't block UI)
     const initializeAuth = async () => {
       try {
         const currentSession = await User.getSession();
@@ -38,12 +32,9 @@ export const AuthProvider = ({ children }) => {
           console.log('👤 User:', currentUser?.email || 'None');
           setUser(currentUser);
         }
+        console.log('✅ Auth initialization complete');
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
-      } finally {
-        console.log('✅ Auth initialization complete');
-        clearTimeout(maxWaitTimer);
-        setLoading(false);
       }
     };
 
