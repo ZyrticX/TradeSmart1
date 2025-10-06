@@ -43,13 +43,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  }
-});
+// Create Supabase client with proper options
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce'
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'tradesmart-web'
+        }
+      }
+    })
+  : null;
+
+// Log client creation
+console.log('🔧 Supabase client created:', !!supabase);
 
 // Helper function to create a base entity with CRUD operations
 export const createEntity = (tableName) => {
@@ -192,10 +204,21 @@ export const auth = {
     
     try {
       console.log('📡 Calling signInWithPassword...');
-      const response = await supabase.auth.signInWithPassword({
+      
+      // Add timeout to detect hanging
+      const loginPromise = supabase.auth.signInWithPassword({
         email,
         password
       });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => {
+          console.error('⏱️ Request timeout after 15 seconds');
+          reject(new Error('Supabase request timeout. This usually means:\n1. Project is paused in Supabase\n2. Wrong URL/Key\n3. Network/CORS issue'));
+        }, 15000)
+      );
+      
+      const response = await Promise.race([loginPromise, timeoutPromise]);
       
       console.log('📥 Raw response:', response);
       
@@ -208,6 +231,8 @@ export const auth = {
       return response;
     } catch (err) {
       console.error('❌ Login exception:', err);
+      console.error('❌ Error type:', err.name);
+      console.error('❌ Error message:', err.message);
       throw err;
     }
   },
