@@ -43,19 +43,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Create Supabase client with proper options
+// Create Supabase client with minimal options (same as test page!)
 export const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        flowType: 'pkce'
-      },
-      global: {
-        headers: {
-          'X-Client-Info': 'tradesmart-web'
-        }
+        autoRefreshToken: true
       }
     })
   : null;
@@ -160,13 +153,13 @@ export const createEntity = (tableName) => {
 
 // Auth helper functions
 export const auth = {
-  // Sign up with email and password
+  // Sign up with email and password (simplified!)
   async signUp(email, password, metadata = {}) {
     console.log('📝 Attempting signup...');
     
     if (!supabase || !supabase.auth) {
       console.error('❌ Supabase client not initialized!');
-      throw new Error('Supabase is not configured. Please check your environment variables.');
+      throw new Error('Supabase is not configured');
     }
     
     try {
@@ -184,18 +177,16 @@ export const auth = {
       }
       
       console.log('✅ Signup successful!');
-      return data;
+      return { data, error: null };
     } catch (err) {
-      console.error('❌ Signup exception:', err);
+      console.error('❌ Signup exception:', err.message);
       throw err;
     }
   },
 
-  // Sign in with email and password
+  // Sign in with email and password (simplified - same as test page!)
   async signIn(email, password) {
-    console.log('🔐 Attempting Supabase login...');
-    console.log('📍 Supabase URL:', supabaseUrl);
-    console.log('🔑 Using key:', supabaseAnonKey?.substring(0, 20) + '...');
+    console.log('🔐 Attempting login...');
     
     if (!supabase || !supabase.auth) {
       console.error('❌ Supabase client not initialized!');
@@ -203,36 +194,21 @@ export const auth = {
     }
     
     try {
-      console.log('📡 Calling signInWithPassword...');
-      
-      // Add timeout to detect hanging
-      const loginPromise = supabase.auth.signInWithPassword({
+      // Direct call without timeout - let Supabase handle it
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => {
-          console.error('⏱️ Request timeout after 15 seconds');
-          reject(new Error('Supabase request timeout. This usually means:\n1. Project is paused in Supabase\n2. Wrong URL/Key\n3. Network/CORS issue'));
-        }, 15000)
-      );
-      
-      const response = await Promise.race([loginPromise, timeoutPromise]);
-      
-      console.log('📥 Raw response:', response);
-      
-      if (response.error) {
-        console.error('❌ Supabase error:', response.error);
-        throw response.error;
+      if (error) {
+        console.error('❌ Login error:', error.message);
+        throw error;
       }
       
-      console.log('✅ Login successful!', response.data);
-      return response;
+      console.log('✅ Login successful!');
+      return { data, error: null };
     } catch (err) {
-      console.error('❌ Login exception:', err);
-      console.error('❌ Error type:', err.name);
-      console.error('❌ Error message:', err.message);
+      console.error('❌ Login exception:', err.message);
       throw err;
     }
   },
