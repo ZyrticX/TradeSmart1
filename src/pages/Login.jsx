@@ -31,9 +31,17 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { data, error } = await signIn(email, password);
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 10000)
+      );
+      
+      const loginPromise = signIn(email, password);
+      
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
       
       if (error) {
+        console.error('Login error:', error);
         setError(
           getText('Invalid email or password. Please try again.', 'אימייל או סיסמה שגויים. אנא נסה שוב.')
         );
@@ -43,9 +51,21 @@ export default function Login() {
       // Redirect to dashboard after successful login
       navigate('/dashboard');
     } catch (err) {
-      setError(
-        getText('An error occurred. Please try again.', 'אירעה שגיאה. אנא נסה שוב.')
-      );
+      console.error('Login exception:', err);
+      
+      // Check if it's a configuration error
+      if (err.message?.includes('timeout') || err.message?.includes('configured')) {
+        setError(
+          getText(
+            'Unable to connect. Please check your internet connection or contact support.',
+            '⚠️ לא ניתן להתחבר. הגדרות Supabase חסרות ב-Vercel. צור קשר עם התמיכה.'
+          )
+        );
+      } else {
+        setError(
+          getText('An error occurred. Please try again.', 'אירעה שגיאה. אנא נסה שוב.')
+        );
+      }
     } finally {
       setLoading(false);
     }
