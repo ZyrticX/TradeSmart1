@@ -2,10 +2,13 @@
 -- FIX: Update trades table to match BASE44 structure
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- First, drop dependent views (we'll recreate them later)
+-- First, drop ALL dependent views (we'll recreate them later)
 DROP VIEW IF EXISTS active_trades_summary CASCADE;
 DROP VIEW IF EXISTS closed_trades_summary CASCADE;
 DROP VIEW IF EXISTS trade_performance_summary CASCADE;
+DROP VIEW IF EXISTS trading_performance_summary CASCADE;
+DROP VIEW IF EXISTS user_trade_stats CASCADE;
+DROP VIEW IF EXISTS account_summary CASCADE;
 
 -- Add user_id column if missing
 ALTER TABLE trades 
