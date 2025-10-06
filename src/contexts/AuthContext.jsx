@@ -18,22 +18,18 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
+    console.log('🔐 Initializing auth...');
+    
+    // Set a maximum wait time - show the app after 2 seconds regardless
+    const maxWaitTimer = setTimeout(() => {
+      console.warn('⏱️ Max wait time reached, showing app...');
+      setLoading(false);
+    }, 2000);
+    
     // Check active sessions and sets the user
     const initializeAuth = async () => {
       try {
-        console.log('🔐 Initializing auth...');
-        
-        // Add timeout to prevent hanging
-        const timeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth timeout')), 5000)
-        );
-        
-        const sessionPromise = User.getSession();
-        const currentSession = await Promise.race([sessionPromise, timeout]).catch(err => {
-          console.warn('⚠️ Session check timeout, continuing without session');
-          return null;
-        });
-        
+        const currentSession = await User.getSession();
         console.log('📋 Session:', currentSession ? 'Found' : 'None');
         setSession(currentSession);
         
@@ -46,6 +42,7 @@ export const AuthProvider = ({ children }) => {
         console.error('❌ Error initializing auth:', error);
       } finally {
         console.log('✅ Auth initialization complete');
+        clearTimeout(maxWaitTimer);
         setLoading(false);
       }
     };
