@@ -21,6 +21,53 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ───────────────────────────────────────────────────────────────────────────
+-- 2.0 User Profiles Table
+-- ───────────────────────────────────────────────────────────────────────────
+-- Extends auth.users with additional user information
+-- This table is automatically populated when a user signs up
+
+CREATE TABLE IF NOT EXISTS profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    full_name TEXT,
+    role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'premium')),
+    phone TEXT,
+    avatar_url TEXT,
+    timezone TEXT DEFAULT 'UTC',
+    preferred_language TEXT DEFAULT 'he' CHECK (preferred_language IN ('en', 'he')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT valid_phone CHECK (phone IS NULL OR length(phone) >= 10)
+);
+
+-- Add comments
+COMMENT ON TABLE profiles IS 'Extended user profile information';
+COMMENT ON COLUMN profiles.id IS 'References auth.users(id)';
+COMMENT ON COLUMN profiles.role IS 'User role: user, admin, or premium';
+COMMENT ON COLUMN profiles.preferred_language IS 'Preferred UI language';
+
+-- Enable Row Level Security
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for profiles
+CREATE POLICY "Users can view their own profile"
+    ON profiles FOR SELECT
+    TO authenticated
+    USING (auth.uid() = id);
+
+CREATE POLICY "Users can update their own profile"
+    ON profiles FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Profiles are created on signup"
+    ON profiles FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = id);
+
+-- ───────────────────────────────────────────────────────────────────────────
 -- 2.1 Accounts Table
 -- ───────────────────────────────────────────────────────────────────────────
 -- Stores trading accounts for each user
@@ -29,13 +76,16 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    currency TEXT DEFAULT 'USD',
-    account_size DECIMAL(15, 2) DEFAULT 100000 CHECK (account_size >= 0),
-    default_risk_percentage DECIMAL(5, 2) DEFAULT 2.0 CHECK (default_risk_percentage >= 0 AND default_risk_percentage <= 100),
-    max_position_size_percentage DECIMAL(5, 2) DEFAULT 25.0 CHECK (max_position_size_percentage >= 0 AND max_position_size_percentage <= 100),
-    commission_fee DECIMAL(10, 2) DEFAULT 0 CHECK (commission_fee >= 0),
-    strategies TEXT[] DEFAULT '{}', -- Array of strategy names
+    name VARCHAR(255) NOT NULL,
+    currency VARCHAR(255) DEFAULT 'USD',
+    account_size INTEGER DEFAULT 100000 CHECK (account_size >= 0),
+    default_risk_percentage DECIMAL(15, 2) DEFAULT 2.0 CHECK (default_risk_percentage >= 0 AND default_risk_percentage <= 100),
+    max_account_risk_percentage DECIMAL(15, 2) DEFAULT 10.0 CHECK (max_account_risk_percentage >= 0 AND max_account_risk_percentage <= 100),
+    max_position_size_percentage DECIMAL(15, 2) DEFAULT 25.0 CHECK (max_position_size_percentage >= 0 AND max_position_size_percentage <= 100),
+    commission_fee DECIMAL(15, 2) DEFAULT 0 CHECK (commission_fee >= 0),
+    strategies TEXT, -- JSON string of strategy names
+    sentiments TEXT, -- JSON string of sentiments data
+    is_sample BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
@@ -48,9 +98,12 @@ COMMENT ON TABLE accounts IS 'Trading accounts belonging to users';
 COMMENT ON COLUMN accounts.currency IS 'Account currency (USD, EUR, ILS, etc.)';
 COMMENT ON COLUMN accounts.account_size IS 'Total account size in account currency';
 COMMENT ON COLUMN accounts.default_risk_percentage IS 'Default risk percentage per trade';
+COMMENT ON COLUMN accounts.max_account_risk_percentage IS 'Maximum total risk percentage across all trades';
 COMMENT ON COLUMN accounts.max_position_size_percentage IS 'Maximum position size as percentage of account';
 COMMENT ON COLUMN accounts.commission_fee IS 'Commission fee per trade in account currency';
-COMMENT ON COLUMN accounts.strategies IS 'Array of trading strategy names';
+COMMENT ON COLUMN accounts.strategies IS 'JSON string of trading strategies';
+COMMENT ON COLUMN accounts.sentiments IS 'JSON string of market sentiments data';
+COMMENT ON COLUMN accounts.is_sample IS 'Whether this is a sample/demo account';
 
 -- ───────────────────────────────────────────────────────────────────────────
 -- 2.2 Trades Table
@@ -805,6 +858,32 @@ VALUES (
     'Excellent resource for beginners'
 );
 */
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- SECTION 10.5: Auto-create Profile on User Signup
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- Function to automatically create a profile when a user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (id, full_name, preferred_language)
+    VALUES (
+        NEW.id,
+        NEW.raw_user_meta_data->>'full_name',
+        COALESCE(NEW.raw_user_meta_data->>'preferred_language', 'he')
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to call the function when a new user is created
+CREATE OR REPLACE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
+
+COMMENT ON FUNCTION public.handle_new_user() IS 'Automatically creates a profile entry when a new user signs up';
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- SECTION 11: Completion Message
