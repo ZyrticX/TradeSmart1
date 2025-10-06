@@ -21,15 +21,31 @@
 
 ### שלב 2️⃣: הרץ את הסקריפט הבא:
 
-העתק והדבק את הקוד הזה:
+**אפשרות 1: הרץ את כל הסקריפט מהקובץ `fix-accounts-table.sql`**
+
+או העתק והדבק את הקוד הזה:
 
 ```sql
--- Add missing 'currency' column to accounts table
+-- Add missing columns to accounts table
 ALTER TABLE accounts 
-ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
+ADD COLUMN IF NOT EXISTS currency VARCHAR(255) DEFAULT 'USD';
 
--- Add comment
-COMMENT ON COLUMN accounts.currency IS 'Account currency (USD, EUR, ILS, etc.)';
+ALTER TABLE accounts 
+ADD COLUMN IF NOT EXISTS max_account_risk_percentage DECIMAL(15, 2) DEFAULT 10.0;
+
+ALTER TABLE accounts 
+ADD COLUMN IF NOT EXISTS sentiments TEXT;
+
+ALTER TABLE accounts 
+ADD COLUMN IF NOT EXISTS is_sample BOOLEAN DEFAULT FALSE;
+
+-- Change account_size type
+ALTER TABLE accounts 
+ALTER COLUMN account_size TYPE INTEGER USING account_size::INTEGER;
+
+-- Change strategies type
+ALTER TABLE accounts 
+ALTER COLUMN strategies TYPE TEXT;
 ```
 
 לחץ **Run** (או Ctrl+Enter)
