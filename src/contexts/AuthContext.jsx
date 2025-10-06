@@ -21,16 +21,20 @@ export const AuthProvider = ({ children }) => {
     // Check active sessions and sets the user
     const initializeAuth = async () => {
       try {
+        console.log('🔐 Initializing auth...');
         const currentSession = await User.getSession();
+        console.log('📋 Session:', currentSession ? 'Found' : 'None');
         setSession(currentSession);
         
         if (currentSession) {
           const currentUser = await User.getCurrentUser();
+          console.log('👤 User:', currentUser?.email || 'None');
           setUser(currentUser);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('❌ Error initializing auth:', error);
       } finally {
+        console.log('✅ Auth initialization complete');
         setLoading(false);
       }
     };
