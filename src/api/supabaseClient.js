@@ -43,14 +43,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Create Supabase client with minimal options (same as test page!)
+// Create Supabase client (no options - use defaults!)
 export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true
-      }
-    })
+  ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
 // Log client creation
