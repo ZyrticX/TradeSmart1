@@ -179,9 +179,11 @@ export const auth = {
     }
   },
 
-  // Sign in with email and password (simplified - same as test page!)
+  // Sign in with email and password
   async signIn(email, password) {
     console.log('🔐 Attempting login...');
+    console.log('📧 Email:', email);
+    console.log('📍 Supabase URL:', supabaseUrl);
     
     if (!supabase || !supabase.auth) {
       console.error('❌ Supabase client not initialized!');
@@ -189,21 +191,32 @@ export const auth = {
     }
     
     try {
-      // Direct call without timeout - let Supabase handle it
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Add timeout to prevent infinite hang
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout - Supabase not responding. Check if project is paused.')), 10000)
+      );
+      
+      const loginPromise = supabase.auth.signInWithPassword({
         email,
         password
       });
       
+      console.log('📡 Calling signInWithPassword...');
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
+      console.log('📥 Got response from Supabase');
+      
       if (error) {
         console.error('❌ Login error:', error.message);
+        console.error('❌ Error code:', error.status);
         throw error;
       }
       
       console.log('✅ Login successful!');
+      console.log('👤 User:', data?.user?.email);
       return { data, error: null };
     } catch (err) {
       console.error('❌ Login exception:', err.message);
+      console.error('❌ Exception type:', err.name);
       throw err;
     }
   },
