@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- FIX: Update trades table to match BASE44 structure
+-- FIX: Update trades table to match required structure
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- First, drop ALL dependent views (we'll recreate them later)
@@ -24,7 +24,7 @@ ADD COLUMN IF NOT EXISTS profit_loss_percentage TEXT;
 ALTER TABLE trades 
 ADD COLUMN IF NOT EXISTS is_sample BOOLEAN DEFAULT FALSE;
 
--- Change data types to match BASE44
+-- Change data types to match schema
 ALTER TABLE trades 
 ALTER COLUMN symbol TYPE VARCHAR(255);
 
@@ -163,7 +163,7 @@ BEGIN
     RAISE NOTICE '  ✓ Added is_sample';
     RAISE NOTICE '  ✓ Added notes';
     RAISE NOTICE '  ✓ Added screenshot_url';
-    RAISE NOTICE '  ✓ Changed data types to match BASE44';
+    RAISE NOTICE '  ✓ Changed data types to match schema';
     RAISE NOTICE '  ✓ Renamed close_price → exit_price';
     RAISE NOTICE '  ✓ Renamed close_date → exit_date';
     RAISE NOTICE '  ✓ Recreated all views';
