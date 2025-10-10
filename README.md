@@ -176,14 +176,14 @@ npm run lint     # בדיקת קוד
 - 📱 Mobile
 - 📱 Tablet
 
-## 🔄 העברה מ-BASE44 ל-Supabase
+## 🔄 Backend & Database
 
-הפרויקט הועבר מ-BASE44 ל-Supabase בהצלחה! השינויים העיקריים:
+הפרויקט משתמש ב-Supabase כ-backend מלא:
 
-1. **API Client**: `base44Client.js` → `supabaseClient.js`
-2. **Entities**: שימוש ב-`createEntity()` במקום BASE44 SDK
+1. **API Client**: `supabaseClient.js` - חיבור ישיר לSupabase
+2. **Entities**: שימוש ב-`createEntity()` לניהול טבלאות
 3. **Authentication**: Supabase Auth עם AuthContext מלא
-4. **File Upload**: Supabase Storage במקום BASE44 File Upload
+4. **File Upload**: Supabase Storage לקבצים ותמונות
 5. **Multi-User**: Row Level Security מבטיח הפרדת נתונים
 
 ### מה חדש?
