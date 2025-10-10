@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת סטטוס Supabase</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #A020F0;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #8010D0;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        pre {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 בדיקת סטטוס Supabase</h1>
+        
+        <div>
+            <button onclick="checkHealth()">בדוק REST API</button>
+            <button onclick="checkAuth()">בדוק Auth API</button>
+            <button onclick="checkBoth()">בדוק הכל</button>
+        </div>
+        
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://eoyuwxtflvadlrnycjkv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVveXV3eHRmbHZhZGxybnljamt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDAwODUsImV4cCI6MjA3NDk3NjA4NX0.3GlUdzOXAay2DqtqEjyBE8RdJgbFMxcoiqvkkFWaQuo';
+
+        const output = document.getElementById('output');
+
+        async function checkHealth() {
+            output.innerHTML = '<div class="result warning">⏳ בודק REST API...</div>';
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (response.status === 200) {
+                    output.innerHTML = `
+                        <div class="result success">
+                            ✅ REST API תקין!<br>
+                            Status: ${response.status}<br>
+                            הפרויקט פעיל ורץ!
+                        </div>
+                    `;
+                } else if (response.status === 401) {
+                    output.innerHTML = `
+                        <div class="result error">
+                            ❌ שגיאת אימות (401)<br>
+                            המפתח לא תקין או פג תוקף
+                        </div>
+                    `;
+                } else {
+                    output.innerHTML = `
+                        <div class="result warning">
+                            ⚠️ תשובה לא צפויה<br>
+                            Status: ${response.status}<br>
+                            ${await response.text()}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                output.innerHTML = `
+                    <div class="result error">
+                        ❌ שגיאת רשת!<br>
+                        ${error.message}<br><br>
+                        <strong>הסיבות האפשריות:</strong><br>
+                        1. הפרויקט מושהה (Paused) ב-Supabase<br>
+                        2. בעיית CORS<br>
+                        3. בעיית רשת
+                    </div>
+                `;
+            }
+        }
+
+        async function checkAuth() {
+            output.innerHTML = '<div class="result warning">⏳ בודק Auth API...</div>';
+            
+            try {
+                // Try to get session (should return 400 without credentials)
+                const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@test.com',
+                        password: 'test'
+                    })
+                });
+
+                if (response.status === 400 || response.status === 401) {
+                    output.innerHTML = `
+                        <div class="result success">
+                            ✅ Auth API תקין!<br>
+                            Status: ${response.status}<br>
+                            הפרויקט פעיל (סירוב כניסה צפוי)
+                        </div>
+                    `;
+                } else {
+                    const data = await response.json();
+                    output.innerHTML = `
+                        <div class="result warning">
+                            ⚠️ תשובה לא צפויה<br>
+                            Status: ${response.status}<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                output.innerHTML = `
+                    <div class="result error">
+                        ❌ שגיאת רשת!<br>
+                        ${error.message}<br><br>
+                        <strong>הסיבות האפשריות:</strong><br>
+                        1. הפרויקט מושהה (Paused) ב-Supabase<br>
+                        2. בעיית CORS<br>
+                        3. בעיית רשת
+                    </div>
+                `;
+            }
+        }
+
+        async function checkBoth() {
+            output.innerHTML = '<div class="result warning">⏳ בודק את כל השירותים...</div>';
+            
+            const results = [];
+            
+            // Check REST
+            try {
+                const restResponse = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: { 'apikey': SUPABASE_KEY }
+                });
+                results.push(`REST API: ${restResponse.status === 200 ? '✅' : '❌'} (${restResponse.status})`);
+            } catch (error) {
+                results.push(`REST API: ❌ ${error.message}`);
+            }
+
+            // Check Auth
+            try {
+                const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/health`, {
+                    headers: { 'apikey': SUPABASE_KEY }
+                });
+                results.push(`Auth API: ${authResponse.ok ? '✅' : '❌'} (${authResponse.status})`);
+            } catch (error) {
+                results.push(`Auth API: ❌ ${error.message}`);
+            }
+
+            output.innerHTML = `
+                <div class="result ${results.every(r => r.includes('✅')) ? 'success' : 'error'}">
+                    <h3>תוצאות בדיקה:</h3>
+                    ${results.map(r => `<div>${r}</div>`).join('')}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
+
