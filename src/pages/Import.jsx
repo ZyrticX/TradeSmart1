@@ -29,9 +29,16 @@ export default function Import() {
       if (currentAccountId) {
         try {
           const account = await Account.get(currentAccountId);
-          setCurrentAccount(account);
+          if (account) {
+            setCurrentAccount(account);
+          } else {
+            console.warn('⚠️ Account not found:', currentAccountId);
+            localStorage.removeItem('currentAccountId');
+            setCurrentAccount(null);
+          }
         } catch (error) {
           console.error('Error loading current account:', error);
+          setCurrentAccount(null);
         }
       }
     };

@@ -62,8 +62,16 @@ export default function Trades() {
         Trade.filter({ account_id: currentAccountId }, '-date_time'),
         Account.get(currentAccountId)
       ]);
-      setTrades(tradesData);
-      setCurrentAccount(accountData);
+      
+      if (!accountData) {
+        console.warn('⚠️ Account not found:', currentAccountId);
+        localStorage.removeItem('currentAccountId');
+        setCurrentAccount(null);
+        setTrades([]);
+      } else {
+        setTrades(tradesData);
+        setCurrentAccount(accountData);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     }

@@ -42,8 +42,16 @@ export default function Journal() {
         Account.get(currentAccountId),
         JournalEntry.filter({ account_id: currentAccountId }, '-date')
       ]);
-      setCurrentAccount(accountData);
-      setEntries(entriesData);
+      
+      if (!accountData) {
+        console.warn('⚠️ Account not found:', currentAccountId);
+        localStorage.removeItem('currentAccountId');
+        setCurrentAccount(null);
+        setEntries([]);
+      } else {
+        setCurrentAccount(accountData);
+        setEntries(entriesData);
+      }
     } catch (error) {
       console.error('Error loading journal entries:', error);
     }

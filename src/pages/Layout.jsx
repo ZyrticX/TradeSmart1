@@ -89,9 +89,18 @@ export default function Layout({ children, currentPageName }) {
         try {
           const { Account } = await import('@/api/entities');
           const account = await Account.get(currentAccountId);
-          setCurrentAccount(account);
+          
+          if (account) {
+            setCurrentAccount(account);
+          } else {
+            console.warn('⚠️ Account not found:', currentAccountId);
+            // Clear invalid account ID
+            localStorage.removeItem('currentAccountId');
+            setCurrentAccount(null);
+          }
         } catch (error) {
           console.error('Error loading current account:', error);
+          setCurrentAccount(null);
         }
       }
     };

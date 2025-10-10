@@ -41,8 +41,16 @@ export default function Watchlist() {
         Account.get(currentAccountId),
         WatchlistNote.filter({ account_id: currentAccountId }, '-date')
       ]);
-      setCurrentAccount(accountData);
-      setNotes(notesData);
+      
+      if (!accountData) {
+        console.warn('⚠️ Account not found:', currentAccountId);
+        localStorage.removeItem('currentAccountId');
+        setCurrentAccount(null);
+        setNotes([]);
+      } else {
+        setCurrentAccount(accountData);
+        setNotes(notesData);
+      }
     } catch (error) { 
       console.error('Error loading watchlist notes:', error); 
     }

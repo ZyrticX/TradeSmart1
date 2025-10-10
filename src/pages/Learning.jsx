@@ -52,8 +52,16 @@ export default function Learning() {
         Account.get(currentAccountId),
         LearningMaterial.filter({ account_id: currentAccountId }, '-created_date')
       ]);
-      setCurrentAccount(accountData);
-      setMaterials(materialsData);
+      
+      if (!accountData) {
+        console.warn('⚠️ Account not found:', currentAccountId);
+        localStorage.removeItem('currentAccountId');
+        setCurrentAccount(null);
+        setMaterials([]);
+      } else {
+        setCurrentAccount(accountData);
+        setMaterials(materialsData);
+      }
     } catch (error) {
       console.error('Error loading learning materials:', error);
     }

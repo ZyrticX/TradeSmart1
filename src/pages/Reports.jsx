@@ -89,6 +89,10 @@ export default function Reports() {
       
       if (accountData) {
         setCurrentAccount(accountData);
+      } else {
+        console.warn('⚠️ Account not found:', currentAccountId);
+        localStorage.removeItem('currentAccountId');
+        setCurrentAccount(null);
       }
       
       // Ensure we set trades even if empty
