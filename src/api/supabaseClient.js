@@ -54,16 +54,22 @@ console.log('🔧 Supabase client created:', !!supabase);
 // Helper function to create a base entity with CRUD operations
 export const createEntity = (tableName) => {
   return {
-    // Get a single record by ID
+    // Get a single record by ID (safe - returns null if not found)
     async get(id) {
+      if (!id) return null;
+      
       const { data, error } = await supabase
         .from(tableName)
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle(); // maybeSingle() doesn't throw if 0 rows found!
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error(`Error getting ${tableName} by id ${id}:`, error);
+        throw error;
+      }
+      
+      return data; // returns null if not found
     },
 
     // Get all records
