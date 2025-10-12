@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,21 @@ import { TrendingUp, Loader2, Mail, Lock, AlertCircle } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const language = localStorage.getItem('language') || 'en';
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      console.log('👤 User already logged in, redirecting to dashboard...');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const getText = (en, he) => {
     switch(language) {
