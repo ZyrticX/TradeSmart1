@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { TrendingUp, Loader2, Mail, Lock, User, AlertCircle, CheckCircle } from 
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp, user } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -22,6 +22,14 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
 
   const language = localStorage.getItem('language') || 'en';
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      console.log('👤 User already logged in, redirecting to dashboard...');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const getText = (en, he) => {
     switch(language) {
