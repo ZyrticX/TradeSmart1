@@ -51,6 +51,13 @@ export const AuthProvider = ({ children }) => {
         setSession(currentSession);
         const currentUser = await User.getCurrentUser();
         setUser(currentUser);
+      } else if (event === 'INITIAL_SESSION') {
+        console.log('🔷 Initial session loaded:', currentSession?.user?.email);
+        setSession(currentSession);
+        if (currentSession) {
+          const currentUser = await User.getCurrentUser();
+          setUser(currentUser);
+        }
       } else if (event === 'SIGNED_OUT') {
         console.warn('⚠️ User signed out - Stack trace:');
         console.trace(); // Shows where this was called from

@@ -31,6 +31,23 @@ export default function SettingsPage() {
     return new Intl.NumberFormat('en-US').format(number);
   };
 
+  // Helper: Convert DB string/array to array
+  const ensureArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    if (typeof value === 'string') {
+      try {
+        // Try to parse as JSON
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        // If not JSON, split by comma or return empty
+        return value.includes(',') ? value.split(',').map(s => s.trim()) : [];
+      }
+    }
+    return [];
+  };
+
   const currentAccountId = localStorage.getItem('currentAccountId');
 
   useEffect(() => {
@@ -245,7 +262,7 @@ export default function SettingsPage() {
                 <div>
                   <Label>{getText('Trading Strategies', 'אסטרטגיות מסחר')}</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {(selectedAccount.strategies || []).map((strategy, index) => (
+                    {ensureArray(selectedAccount.strategies).map((strategy, index) => (
                       <Badge key={index} variant="secondary" className="px-3 py-1 flex items-center gap-2">
                         {strategy}
                         <button onClick={() => removeFromList('strategies', strategy)} className="text-gray-500 hover:text-red-500 ms-1">
@@ -262,7 +279,7 @@ export default function SettingsPage() {
                  <div>
                   <Label>{getText('Sentiments for Tracking', 'סנטימנטים למעקב')}</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {(selectedAccount.sentiments || []).map((sentiment, index) => (
+                    {ensureArray(selectedAccount.sentiments).map((sentiment, index) => (
                       <Badge key={index} variant="secondary" className="px-3 py-1 flex items-center gap-2">
                         {sentiment}
                         <button onClick={() => removeFromList('sentiments', sentiment)} className="text-gray-500 hover:text-red-500 ms-1">
@@ -358,13 +375,13 @@ export default function SettingsPage() {
                     <div>
                         <h4 className="font-medium">{getText('Available Strategies', 'אסטרטגיות זמינות')}</h4>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {(selectedAccount.strategies || []).map((s, i) => <Badge key={i} variant="outline">{s}</Badge>)}
+                            {ensureArray(selectedAccount.strategies).map((s, i) => <Badge key={i} variant="outline">{s}</Badge>)}
                         </div>
                     </div>
                     <div>
                         <h4 className="font-medium">{getText('Available Sentiments', 'סנטימנטים זמינים')}</h4>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {(selectedAccount.sentiments || []).map((s, i) => <Badge key={i} variant="outline">{s}</Badge>)}
+                            {ensureArray(selectedAccount.sentiments).map((s, i) => <Badge key={i} variant="outline">{s}</Badge>)}
                         </div>
                     </div>
                 </div>
