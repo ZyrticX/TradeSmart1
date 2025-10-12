@@ -88,9 +88,11 @@ export default function SettingsPage() {
   const handleNewAccount = () => {
     if (!user) {
       console.error('❌ Cannot create account - user not authenticated');
+      alert(getText('Please log in to create an account', 'אנא התחבר כדי ליצור חשבון'));
       return;
     }
 
+    console.log('✅ Creating new account for user:', user.email);
     setSelectedAccount({
       name: '',
       user_id: user.id, // ✅ Add user_id
