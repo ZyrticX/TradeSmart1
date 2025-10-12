@@ -76,6 +76,13 @@ export default function Layout({ children, currentPageName }) {
 
   const isRTL = language === 'he';
 
+  // Make currentAccount updater available globally
+  React.useEffect(() => {
+    window.currentAccountUpdater = (newAccount) => {
+      setCurrentAccount(newAccount);
+    };
+  }, []);
+
   React.useEffect(() => {
     // Simple theme loading without dark mode complexity
     if (!localStorage.getItem('language')) {

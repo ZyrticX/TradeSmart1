@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Settings as SettingsIcon, DollarSign, Shield, Target, Plus, X, Banknote, Edit, Trash2 } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -84,8 +86,14 @@ export default function SettingsPage() {
   };
 
   const handleNewAccount = () => {
+    if (!user) {
+      console.error('❌ Cannot create account - user not authenticated');
+      return;
+    }
+
     setSelectedAccount({
       name: '',
+      user_id: user.id, // ✅ Add user_id
       currency: 'USD',
       account_size: 100000,
       default_risk_percentage: 2,
@@ -104,21 +112,54 @@ export default function SettingsPage() {
     try {
       let savedAccount;
       if (selectedAccount.id) {
-        await Account.update(selectedAccount.id, selectedAccount);
-        savedAccount = selectedAccount;
+        // For updates, don't send user_id (it shouldn't change)
+        const { user_id, ...updateData } = selectedAccount;
+        await Account.update(selectedAccount.id, updateData);
+        savedAccount = { ...selectedAccount, ...updateData }; // Preserve all data
       } else {
-        savedAccount = await Account.create(selectedAccount);
+        // For new accounts, ensure user_id is included
+        if (!user?.id) {
+          console.error('❌ Cannot create account - user not authenticated');
+          throw new Error('User not authenticated');
+        }
+        const accountData = { ...selectedAccount, user_id: user.id };
+        savedAccount = await Account.create(accountData);
         localStorage.setItem('currentAccountId', savedAccount.id);
       }
       setIsEditing(false);
       await loadAccounts();
       
       if (!selectedAccount.id) {
-        window.location.reload();
+        // Instead of reload, update localStorage and state
+        console.log('✅ New account created, updating state...');
+        localStorage.setItem('currentAccountId', savedAccount.id);
+
+        // Update the currentAccount context if available
+        if (window.currentAccountUpdater) {
+          window.currentAccountUpdater(savedAccount);
+        }
+
+        // Refresh accounts list
+        await loadAccounts();
+
+        // Set as selected account
+        setSelectedAccount(savedAccount);
       }
     } catch (error) {
-      console.error('Error saving account:', error);
-      alert(getText("Error saving account. Please try again.", "שגיאה בשמירת החשבון. אנא נסה שוב."));
+      console.error('❌ Error saving account:', error);
+
+      // Show more specific error messages
+      let errorMessage = getText("Error saving account. Please try again.", "שגיאה בשמירת החשבון. אנא נסה שוב.");
+
+      if (error.message?.includes('duplicate key')) {
+        errorMessage = getText("Account name already exists. Please choose a different name.", "שם החשבון כבר קיים. אנא בחר שם אחר.");
+      } else if (error.message?.includes('permission denied') || error.message?.includes('unauthorized')) {
+        errorMessage = getText("You don't have permission to save this account.", "אין לך הרשאה לשמור חשבון זה.");
+      } else if (error.message?.includes('foreign key')) {
+        errorMessage = getText("Database error. Please contact support.", "שגיאת מסד נתונים. אנא פנה לתמיכה.");
+      }
+
+      alert(errorMessage);
     }
     setIsSaving(false);
   };
