@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [newSentiment, setNewSentiment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   
   const language = localStorage.getItem('language') || 'en';
   const isRTL = language === 'he';
@@ -131,10 +132,9 @@ export default function SettingsPage() {
         localStorage.setItem('currentAccountId', savedAccount.id);
       }
       setIsEditing(false);
-      await loadAccounts();
-      
+
       if (!selectedAccount.id) {
-        // Instead of reload, update localStorage and state
+        // New account was created
         console.log('✅ New account created, updating state...');
         localStorage.setItem('currentAccountId', savedAccount.id);
 
@@ -143,12 +143,18 @@ export default function SettingsPage() {
           window.currentAccountUpdater(savedAccount);
         }
 
-        // Refresh accounts list
-        await loadAccounts();
-
         // Set as selected account
         setSelectedAccount(savedAccount);
       }
+
+      // Refresh accounts list once (avoid duplicate calls)
+      await loadAccounts();
+
+      // Show success message briefly
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+
+      console.log('✅ Account saved successfully!');
     } catch (error) {
       console.error('❌ Error saving account:', error);
 
@@ -161,11 +167,15 @@ export default function SettingsPage() {
         errorMessage = getText("You don't have permission to save this account.", "אין לך הרשאה לשמור חשבון זה.");
       } else if (error.message?.includes('foreign key')) {
         errorMessage = getText("Database error. Please contact support.", "שגיאת מסד נתונים. אנא פנה לתמיכה.");
+      } else if (error.message?.includes('User not authenticated')) {
+        errorMessage = getText("Please log in again to create an account.", "אנא התחבר שוב כדי ליצור חשבון.");
       }
 
       alert(errorMessage);
+    } finally {
+      // Always reset loading state
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
   
   const handleDelete = async (accountId) => {
@@ -382,13 +392,32 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 
+                {/* Success message */}
+                {saveSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800 text-sm">
+                      {getText('Account saved successfully!', 'החשבון נשמר בהצלחה!')}
+                    </p>
+                  </div>
+                )}
+
                 {/* Save/Cancel buttons moved to bottom */}
                 <div className="flex justify-end gap-2 pt-6 border-t">
                   <Button variant="outline" onClick={() => { setIsEditing(false); loadAccounts(); }}>
                     {getText('Cancel', 'ביטול')}
                   </Button>
-                  <Button onClick={handleSave} disabled={isSaving}>
-                    {isSaving ? getText('Saving...', 'שומר...') : getText('Save', 'שמור')}
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving || !selectedAccount?.name?.trim()}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                        {getText('Saving...', 'שומר...')}
+                      </>
+                    ) : (
+                      getText('Save', 'שמור')
+                    )}
                   </Button>
                 </div>
               </>
