@@ -18,38 +18,74 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
+    console.log('🔐 Initializing AuthContext...');
+    
     // Check active sessions in the background (doesn't block UI)
     const initializeAuth = async () => {
       try {
+        console.log('📍 Checking for existing session...');
         const currentSession = await User.getSession();
-        setSession(currentSession);
         
         if (currentSession) {
+          console.log('✅ Session found:', currentSession.user?.email);
+          setSession(currentSession);
           const currentUser = await User.getCurrentUser();
           setUser(currentUser);
+        } else {
+          console.log('ℹ️ No existing session');
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('❌ Auth initialization error:', error);
       }
     };
 
     initializeAuth();
 
     // Listen for changes on auth state (sign in, sign out, etc.)
+    console.log('👂 Setting up auth state listener...');
     const { data: { subscription } } = User.onAuthStateChange(async (event, currentSession) => {
-      setSession(currentSession);
+      console.log('🔥 Auth event:', event, 'Session:', currentSession?.user?.email || 'none');
       
-      if (currentSession) {
+      if (event === 'SIGNED_IN') {
+        console.log('✅ User signed in:', currentSession?.user?.email);
+        setSession(currentSession);
         const currentUser = await User.getCurrentUser();
         setUser(currentUser);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        console.warn('⚠️ User signed out - Stack trace:');
+        console.trace(); // Shows where this was called from
+        setSession(null);
         setUser(null);
+        localStorage.removeItem('currentAccountId');
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('🔄 Token refreshed for:', currentSession?.user?.email);
+        setSession(currentSession);
+        // Don't update user - just refresh session
+      } else if (event === 'USER_UPDATED') {
+        console.log('👤 User updated:', currentSession?.user?.email);
+        setSession(currentSession);
+        const currentUser = await User.getCurrentUser();
+        setUser(currentUser);
+      } else if (event === 'PASSWORD_RECOVERY') {
+        console.log('🔑 Password recovery');
+        setSession(currentSession);
+      } else {
+        console.log('❓ Unknown auth event:', event);
+        // For any other event, only update session if it exists
+        if (currentSession) {
+          setSession(currentSession);
+          const currentUser = await User.getCurrentUser();
+          setUser(currentUser);
+        }
       }
       
       setLoading(false);
     });
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      console.log('🧹 Cleaning up auth listener');
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email, password, metadata = {}) => {
