@@ -125,7 +125,9 @@ export default function SettingsPage() {
           throw new Error('User not authenticated');
         }
         const accountData = { ...selectedAccount, user_id: user.id };
+        console.log('📝 Creating account with data:', accountData);
         savedAccount = await Account.create(accountData);
+        console.log('✅ Account created successfully:', savedAccount.id);
         localStorage.setItem('currentAccountId', savedAccount.id);
       }
       setIsEditing(false);
