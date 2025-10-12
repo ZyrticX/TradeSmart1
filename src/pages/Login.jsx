@@ -56,9 +56,14 @@ export default function Login() {
         return;
       }
 
-      console.log('✅ Login successful, redirecting...');
-      // Redirect to dashboard after successful login
-      navigate('/dashboard');
+      console.log('✅ Login successful! Data:', data);
+      console.log('🧭 Attempting navigation to /dashboard...');
+      
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        console.log('🚀 Navigating now!');
+        navigate('/dashboard');
+      }, 100);
     } catch (err) {
       console.error('❌ Login exception:', err);
       setError(err.message || getText('An error occurred', 'אירעה שגיאה'));
