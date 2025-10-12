@@ -29,10 +29,16 @@ export const AuthProvider = ({ children }) => {
         if (currentSession) {
           console.log('✅ Session found:', currentSession.user?.email);
           setSession(currentSession);
-          const currentUser = await User.getCurrentUser();
-          setUser(currentUser);
+          try {
+            const currentUser = await User.getCurrentUser();
+            setUser(currentUser);
+          } catch (error) {
+            console.warn('⚠️ Failed to get current user during init:', error);
+            setUser(currentSession.user ?? null);
+          }
         } else {
           console.log('ℹ️ No existing session');
+          setUser(null);
         }
       } catch (error) {
         console.error('❌ Auth initialization error:', error);
@@ -49,15 +55,11 @@ export const AuthProvider = ({ children }) => {
       if (event === 'SIGNED_IN') {
         console.log('✅ User signed in:', currentSession?.user?.email);
         setSession(currentSession);
-        const currentUser = await User.getCurrentUser();
-        setUser(currentUser);
+        setUser(currentSession?.user ?? null);
       } else if (event === 'INITIAL_SESSION') {
         console.log('🔷 Initial session loaded:', currentSession?.user?.email);
         setSession(currentSession);
-        if (currentSession) {
-          const currentUser = await User.getCurrentUser();
-          setUser(currentUser);
-        }
+        setUser(currentSession?.user ?? null);
       } else if (event === 'SIGNED_OUT') {
         console.warn('⚠️ User signed out - Stack trace:');
         console.trace(); // Shows where this was called from
@@ -67,12 +69,17 @@ export const AuthProvider = ({ children }) => {
       } else if (event === 'TOKEN_REFRESHED') {
         console.log('🔄 Token refreshed for:', currentSession?.user?.email);
         setSession(currentSession);
-        // Don't update user - just refresh session
+        // Keep existing user - just refresh session
       } else if (event === 'USER_UPDATED') {
         console.log('👤 User updated:', currentSession?.user?.email);
         setSession(currentSession);
-        const currentUser = await User.getCurrentUser();
-        setUser(currentUser);
+        try {
+          const currentUser = await User.getCurrentUser();
+          setUser(currentUser);
+        } catch (error) {
+          console.warn('⚠️ Failed to get current user after update:', error);
+          setUser(currentSession?.user ?? null);
+        }
       } else if (event === 'PASSWORD_RECOVERY') {
         console.log('🔑 Password recovery');
         setSession(currentSession);

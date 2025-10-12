@@ -18,11 +18,26 @@ export default function Login() {
 
   const language = localStorage.getItem('language') || 'en';
 
-  // Redirect if already logged in
+  // Redirect if already logged in or login was successful
   useEffect(() => {
+    // Check if user is logged in
     if (user) {
       console.log('👤 User already logged in, redirecting to dashboard...');
       navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    // Check if login was successful but user state not updated yet
+    const loginSuccess = localStorage.getItem('loginSuccess');
+    if (loginSuccess === 'true') {
+      console.log('🔄 Login success detected, clearing flag and redirecting...');
+      localStorage.removeItem('loginSuccess');
+
+      // Small delay to ensure auth state catches up
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 50);
+      return;
     }
   }, [user, navigate]);
 
@@ -65,13 +80,13 @@ export default function Login() {
       }
 
       console.log('✅ Login successful! Data:', data);
-      console.log('🧭 Attempting navigation to /dashboard...');
-      
-      // Small delay to ensure auth state is updated
-      setTimeout(() => {
-        console.log('🚀 Navigating now!');
-        navigate('/dashboard');
-      }, 100);
+
+      // Update local storage to indicate login success
+      localStorage.setItem('loginSuccess', 'true');
+
+      // Navigate immediately - the useEffect will handle the auth state update
+      console.log('🧭 Navigating to dashboard...');
+      navigate('/dashboard');
     } catch (err) {
       console.error('❌ Login exception:', err);
       setError(err.message || getText('An error occurred', 'אירעה שגיאה'));
