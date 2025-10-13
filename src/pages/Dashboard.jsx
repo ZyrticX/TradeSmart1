@@ -47,10 +47,15 @@ export default function Dashboard() {
   const loadAccounts = async () => {
     setIsLoading(true);
     try {
+      console.log('🔍 Loading accounts...');
       const accountsData = await Account.list();
+      console.log('📊 Raw accounts data:', accountsData);
+      console.log('📊 Accounts data type:', typeof accountsData);
+      console.log('📊 Accounts is array:', Array.isArray(accountsData));
 
       // Ensure accountsData is always an array
       const safeAccountsData = Array.isArray(accountsData) ? accountsData : [];
+      console.log('📊 Safe accounts data:', safeAccountsData);
       setAccounts(safeAccountsData);
 
       const currentId = localStorage.getItem('currentAccountId');
@@ -264,12 +269,13 @@ export default function Dashboard() {
                   <SelectValue placeholder={getText('Select account', 'בחר חשבון')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.isArray(accounts) && accounts.map(account => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                  {!Array.isArray(accounts) && (
+                  {Array.isArray(accounts) && accounts.length > 0 ? (
+                    accounts.map(account => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name}
+                      </SelectItem>
+                    ))
+                  ) : (
                     <SelectItem value="" disabled>
                       {getText('No accounts available', 'אין חשבונות זמינים')}
                     </SelectItem>
