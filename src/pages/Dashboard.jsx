@@ -48,25 +48,33 @@ export default function Dashboard() {
     setIsLoading(true);
     try {
       const accountsData = await Account.list();
-      setAccounts(accountsData);
+
+      // Ensure accountsData is always an array
+      const safeAccountsData = Array.isArray(accountsData) ? accountsData : [];
+      setAccounts(safeAccountsData);
 
       const currentId = localStorage.getItem('currentAccountId');
-      const accountExists = currentId && accountsData.some(acc => acc.id === currentId);
+      const accountExists = currentId && safeAccountsData.some(acc => acc.id === currentId);
 
       if (accountExists) {
-        const account = accountsData.find(a => a.id === currentId);
+        const account = safeAccountsData.find(a => a.id === currentId);
         setCurrentAccount(account);
         loadData(currentId);
-      } else if (accountsData.length > 0) {
-        localStorage.setItem('currentAccountId', accountsData[0].id);
-        window.location.reload();
+      } else if (safeAccountsData.length > 0) {
+        // Set first account as current if no current account exists
+        const firstAccount = safeAccountsData[0];
+        localStorage.setItem('currentAccountId', firstAccount.id);
+        setCurrentAccount(firstAccount);
+        loadData(firstAccount.id);
       } else {
+        // No accounts available
         localStorage.removeItem('currentAccountId');
         setCurrentAccount(null);
         setIsLoading(false);
       }
     } catch (error) {
       console.error('Error loading accounts:', error);
+      setAccounts([]); // Set empty array on error
       setIsLoading(false);
     }
   };
@@ -78,7 +86,7 @@ export default function Dashboard() {
         return;
       }
       const allTrades = await Trade.filter({ account_id: accountId }, '-date_time');
-      setTrades(allTrades);
+      setTrades(Array.isArray(allTrades) ? allTrades : []);
     } catch (error) {
       console.error('Error loading data:', error);
       setTrades([]); // Set empty array on error
@@ -256,11 +264,16 @@ export default function Dashboard() {
                   <SelectValue placeholder={getText('Select account', 'בחר חשבון')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map(account => (
+                  {Array.isArray(accounts) && accounts.map(account => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.name}
                     </SelectItem>
                   ))}
+                  {!Array.isArray(accounts) && (
+                    <SelectItem value="" disabled>
+                      {getText('No accounts available', 'אין חשבונות זמינים')}
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
