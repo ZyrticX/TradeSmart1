@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Trade, Account, TradeEvent } from "@/api/entities";
+import { Trade, Account, TradeEvent, normalizeAccount } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Search, TrendingUp, TrendingDown, Eye, Trash2 } from "lucide-react";
@@ -70,7 +70,7 @@ export default function Trades() {
         setTrades([]);
       } else {
         setTrades(tradesData);
-        setCurrentAccount(accountData);
+        setCurrentAccount(normalizeAccount(accountData));
       }
     } catch (error) {
       console.error('Error loading data:', error);

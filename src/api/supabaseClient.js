@@ -152,6 +152,31 @@ export const createEntity = (tableName) => {
   };
 };
 
+// Helper: Normalize account data (parse strategies/sentiments from JSON strings)
+export const normalizeAccount = (account) => {
+  if (!account) return null;
+  
+  const ensureArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.includes(',') ? value.split(',').map(s => s.trim()) : [];
+      }
+    }
+    return [];
+  };
+
+  return {
+    ...account,
+    strategies: ensureArray(account.strategies),
+    sentiments: ensureArray(account.sentiments)
+  };
+};
+
 // Auth helper functions
 export const auth = {
   // Sign up with email and password (simplified!)

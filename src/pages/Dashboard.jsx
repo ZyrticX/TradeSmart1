@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Trade, Account } from "@/api/entities";
+import { Trade, Account, normalizeAccount } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle }
   from "@/components/ui/card";
@@ -53,8 +53,10 @@ export default function Dashboard() {
       console.log('📊 Accounts data type:', typeof accountsData);
       console.log('📊 Accounts is array:', Array.isArray(accountsData));
 
-      // Ensure accountsData is always an array
-      const safeAccountsData = Array.isArray(accountsData) ? accountsData : [];
+      // Ensure accountsData is always an array and normalize each account
+      const safeAccountsData = Array.isArray(accountsData) 
+        ? accountsData.map(normalizeAccount) 
+        : [];
       console.log('📊 Safe accounts data:', safeAccountsData);
       setAccounts(safeAccountsData);
 

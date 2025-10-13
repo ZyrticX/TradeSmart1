@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { LearningMaterial, Account } from "@/api/entities";
+import { LearningMaterial, Account, normalizeAccount } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,7 @@ export default function Learning() {
         setCurrentAccount(null);
         setMaterials([]);
       } else {
-        setCurrentAccount(accountData);
+        setCurrentAccount(normalizeAccount(accountData));
         setMaterials(materialsData);
       }
     } catch (error) {

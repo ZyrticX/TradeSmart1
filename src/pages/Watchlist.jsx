@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { WatchlistNote, Account } from "@/api/entities";
+import { WatchlistNote, Account, normalizeAccount } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Eye, Search } from "lucide-react";
@@ -48,7 +48,7 @@ export default function Watchlist() {
         setCurrentAccount(null);
         setNotes([]);
       } else {
-        setCurrentAccount(accountData);
+        setCurrentAccount(normalizeAccount(accountData));
         setNotes(notesData);
       }
     } catch (error) { 

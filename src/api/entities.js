@@ -1,4 +1,4 @@
-import { createEntity, auth as supabaseAuth } from './supabaseClient';
+import { createEntity, auth as supabaseAuth, normalizeAccount } from './supabaseClient';
 
 // Define all entities using the Supabase client
 export const Trade = createEntity('trades');
@@ -11,3 +11,6 @@ export const UserPreferences = createEntity('user_preferences');
 
 // Export auth
 export const User = supabaseAuth;
+
+// Export helper
+export { normalizeAccount };

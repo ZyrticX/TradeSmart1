@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Trade, Account } from "@/api/entities";
+import { Trade, Account, normalizeAccount } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,7 +88,7 @@ export default function Reports() {
       console.log('Loaded account:', accountData);
       
       if (accountData) {
-        setCurrentAccount(accountData);
+        setCurrentAccount(normalizeAccount(accountData));
       } else {
         console.warn('⚠️ Account not found:', currentAccountId);
         localStorage.removeItem('currentAccountId');

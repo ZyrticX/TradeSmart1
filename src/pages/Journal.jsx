@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { JournalEntry, Account } from "@/api/entities";
+import { JournalEntry, Account, normalizeAccount } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, BookOpen } from "lucide-react";
@@ -49,7 +49,7 @@ export default function Journal() {
         setCurrentAccount(null);
         setEntries([]);
       } else {
-        setCurrentAccount(accountData);
+        setCurrentAccount(normalizeAccount(accountData));
         setEntries(entriesData);
       }
     } catch (error) {
