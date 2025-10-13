@@ -149,5 +149,80 @@ git push
 
 ---
 
+---
+
+## 🔄 **עדכון #2: תיקון נוסף - S.map is not a function**
+
+### 🐛 **בעיה נוספת שהתגלתה:**
+אחרי שתיקנו את ה-Loader2, השגיאה השתנתה ל:
+```
+TypeError: S.map is not a function
+```
+
+### 🔍 **הסיבה:**
+ה-`strategies` ו-`sentiments` בחשבונות נשמרים ב-DB כ-**TEXT (JSON string)**:
+```json
+{
+  "strategies": "[\"פריצה\",\"תיקון\"]",  // ← זה STRING
+  "sentiments": "[\"שורי\",\"דובי\",\"ניטרלי\"]"  // ← זה STRING
+}
+```
+
+אבל הקוד מצפה ל-**ARRAY** כדי לעשות `.map()`.
+
+### ✅ **הפתרון:**
+
+**1. יצרנו פונקציה מרכזית ב-`supabaseClient.js`:**
+```javascript
+export const normalizeAccount = (account) => {
+  if (!account) return null;
+  
+  const ensureArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.includes(',') ? value.split(',').map(s => s.trim()) : [];
+      }
+    }
+    return [];
+  };
+
+  return {
+    ...account,
+    strategies: ensureArray(account.strategies),
+    sentiments: ensureArray(account.sentiments)
+  };
+};
+```
+
+**2. ייצאנו אותה מ-`entities.js`:**
+```javascript
+export { normalizeAccount };
+```
+
+**3. השתמשנו בה בכל הדפים:**
+- ✅ `Dashboard.jsx` - `setCurrentAccount(normalizeAccount(accountData))`
+- ✅ `Trades.jsx` - `setCurrentAccount(normalizeAccount(accountData))`
+- ✅ `Journal.jsx` - `setCurrentAccount(normalizeAccount(accountData))`
+- ✅ `Learning.jsx` - `setCurrentAccount(normalizeAccount(accountData))`
+- ✅ `Watchlist.jsx` - `setCurrentAccount(normalizeAccount(accountData))`
+- ✅ `Reports.jsx` - `setCurrentAccount(normalizeAccount(accountData))`
+- ✅ `Settings.jsx` - כבר השתמש ב-`ensureArray()` מקומי
+
+### 📦 **Commit & Deploy:**
+```bash
+git add -A
+git commit -m "Fix: Normalize account strategies/sentiments from JSON strings to arrays across all pages"
+git push
+```
+
+✅ **Vercel deploying עכשיו...**
+
+---
+
 **הכל תקין עכשיו! 🎉**
 
