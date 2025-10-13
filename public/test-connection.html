@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת חיבור</title>
+    <style>
+        body {
+            font-family: system-ui;
+            margin: 50px;
+            text-align: center;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .button {
+            background: #A020F0;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .button:hover { background: #8010D0; }
+        .code {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            text-align: left;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 בדיקת חיבור ל-Supabase</h1>
+        <div class="status" id="status">⏳ בודק...</div>
+
+        <div id="results" style="display: none;">
+            <h3>תוצאות:</h3>
+            <div class="code" id="results-content"></div>
+        </div>
+
+        <button class="button" onclick="testSupabase()">בדוק חיבור</button>
+        <button class="button" onclick="window.location.reload()">רענן דף</button>
+    </div>
+
+    <script type="module">
+        async function testSupabase() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            const resultsContent = document.getElementById('results-content');
+
+            status.innerHTML = '⏳ בודק חיבור ל-Supabase...';
+
+            try {
+                // Check if Supabase client exists
+                const hasClient = typeof window.supabase !== 'undefined' || typeof import !== 'undefined';
+                resultsContent.innerHTML = '✅ Supabase client נמצא\n';
+
+                // Try to call Supabase health endpoint
+                const response = await fetch('https://eoyuwxtflvadlrnycjkv.supabase.co/auth/v1/health');
+                const healthData = await response.text();
+
+                if (response.ok) {
+                    resultsContent.innerHTML += '✅ Supabase מגיב\n';
+                    resultsContent.innerHTML += `📊 Status: ${response.status}\n`;
+                    resultsContent.innerHTML += `📝 Response: ${healthData}\n`;
+                    status.innerHTML = '<span class="success">✅ החיבור ל-Supabase תקין!</span>';
+                } else {
+                    resultsContent.innerHTML += `⚠️ Supabase מגיב עם Status: ${response.status}\n`;
+                    resultsContent.innerHTML += `📝 Response: ${healthData}\n`;
+                    status.innerHTML = '<span class="warning">⚠️ בעיה עם Supabase</span>';
+                }
+
+            } catch (error) {
+                resultsContent.innerHTML += `❌ שגיאה: ${error.message}\n`;
+                resultsContent.innerHTML += `❌ Error type: ${error.name}\n`;
+                status.innerHTML = '<span class="error">❌ בעיה בחיבור</span>';
+            }
+
+            results.style.display = 'block';
+        }
+
+        // Auto test on load
+        testSupabase();
+    </script>
+</body>
+</html>
+

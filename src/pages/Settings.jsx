@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, DollarSign, Shield, Target, Plus, X, Banknote, Edit, Trash2 } from "lucide-react";
+import { Settings as SettingsIcon, DollarSign, Shield, Target, Plus, X, Banknote, Edit, Trash2, Loader2 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function SettingsPage() {
